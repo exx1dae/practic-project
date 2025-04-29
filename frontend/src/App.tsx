@@ -15,15 +15,29 @@ import {
 import { DetectForm } from "@/components/custom/DetectForm.tsx";
 import { EmptyStateMedia } from "@/components/custom/EmptyStateMedia.tsx";
 import { DetectionsDataTable } from "@/entities/Detetctions";
+import { useState } from "react";
 
 export const App = () => {
+  const [url, setUrl] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("detection");
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <div className="grid grid-cols-5 gap-8 max-w-7xl w-full">
-        <Tabs className="col-span-3" defaultValue="detection">
+        <Tabs className="col-span-3" defaultValue="detection" value={activeTab}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="detection">Обнаружение</TabsTrigger>
-            <TabsTrigger value="history">История</TabsTrigger>
+            <TabsTrigger
+              value="detection"
+              onClick={() => setActiveTab("detection")}
+            >
+              Обнаружение
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              onClick={() => setActiveTab("history")}
+            >
+              История
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="detection">
             <Card>
@@ -34,7 +48,7 @@ export const App = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DetectForm />
+                <DetectForm setUrl={setUrl} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -47,7 +61,7 @@ export const App = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <DetectionsDataTable />
+                <DetectionsDataTable onAddFirstImageClick={setActiveTab} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -61,7 +75,7 @@ export const App = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <EmptyStateMedia />
+            {url ? <img src={url} alt="" /> : <EmptyStateMedia />}
           </CardContent>
         </Card>
       </div>

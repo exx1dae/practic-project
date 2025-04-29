@@ -1,7 +1,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { HistoryItem } from "@/entities/Detetctions/model/types";
 import { DataTable } from "@/components/custom/DataTable.tsx";
-import { useGetDetectionsHistoryQuery } from "@/entities/Detetctions";
+import {
+  useDeleteDetectionHistoryItemMutation,
+  useGetDetectionsHistoryQuery,
+} from "@/entities/Detetctions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -43,7 +46,17 @@ const columns: ColumnDef<HistoryItem>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const { id: _ } = row.original;
+      const [deleteDetection] = useDeleteDetectionHistoryItemMutation();
+
+      const { id } = row.original;
+
+      const onDelete = async (id: number) => {
+        try {
+          await deleteDetection(id).unwrap();
+        } catch (e) {
+          console.error(e);
+        }
+      };
 
       return (
         <DropdownMenu>
@@ -62,7 +75,10 @@ const columns: ColumnDef<HistoryItem>[] = [
               <Download /> JSON
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(id)}
+            >
               <Trash />
               Удалить
             </DropdownMenuItem>
@@ -73,7 +89,11 @@ const columns: ColumnDef<HistoryItem>[] = [
   },
 ];
 
-export const DetectionsDataTable = () => {
+export const DetectionsDataTable = ({
+  onAddFirstImageClick,
+}: {
+  onAddFirstImageClick: (value: string) => void;
+}) => {
   const { data: history, isLoading } = useGetDetectionsHistoryQuery();
 
   if (isLoading || !history) {
@@ -85,5 +105,11 @@ export const DetectionsDataTable = () => {
     timestamp: format(new Date(item.timestamp), "dd.MM.yyyy HH:mm"),
   }));
 
-  return <DataTable data={serializedHistory} columns={columns} />;
+  return (
+    <DataTable
+      additionalHandler={onAddFirstImageClick}
+      data={serializedHistory}
+      columns={columns}
+    />
+  );
 };

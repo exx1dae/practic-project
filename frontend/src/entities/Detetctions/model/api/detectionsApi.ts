@@ -11,11 +11,18 @@ export const detectionsApi = api.injectEndpoints({
         response.history,
       providesTags: ["DetectHorses"],
     }),
-    deleteDetectionHistoryItem: builder.mutation<void, number>({}),
+    deleteDetectionHistoryItem: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `/history/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["DetectHorses"],
+    }),
   }),
 });
 
 export const {
   useGetDetectionsHistoryQuery,
   useLazyGetDetectionsHistoryQuery,
+  useDeleteDetectionHistoryItemMutation,
 } = detectionsApi;

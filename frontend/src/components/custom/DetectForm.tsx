@@ -17,15 +17,22 @@ import { Button } from "@/components/ui/button.tsx";
 import { ImageUpload } from "@/components/custom/ImageUpload.tsx";
 import { toast } from "sonner";
 import { useDetectHorsesMutation } from "@/features/DetectHorses";
+import { Loader } from "lucide-react";
+import { useLazyVisualizeDetectionQuery } from "@/features/DetectHorses/model/api/detectApi.ts";
 
-export const DetectForm = () => {
+export const DetectForm = ({ setUrl }: { setUrl: (url: string) => void }) => {
   const methods = useForm<DetectSchemaType>({
     resolver: zodResolver(DetectSchema),
     mode: "onBlur",
   });
-  const { control, handleSubmit } = methods;
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = methods;
 
-  const [detectHorses] = useDetectHorsesMutation();
+  const [visualize, { data: blob }] = useLazyVisualizeDetectionQuery();
+  const [detectHorses, { isLoading }] = useDetectHorsesMutation();
 
   const onSubmit = async (data: DetectSchemaType) => {
     try {
@@ -33,6 +40,11 @@ export const DetectForm = () => {
       formData.append("file", data.file);
 
       const response = await detectHorses(formData).unwrap();
+      await visualize(response.id).unwrap();
+
+      const url = URL.createObjectURL(blob);
+
+      setUrl(url);
 
       console.log(response);
     } catch (e) {
@@ -62,7 +74,16 @@ export const DetectForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit">Обнаружить</Button>
+        <Button type="submit" disabled={isSubmitting || isLoading}>
+          {isSubmitting || isLoading ? (
+            <>
+              <Loader />
+              Обнаружение...
+            </>
+          ) : (
+            "Обнаружить"
+          )}
+        </Button>
       </form>
     </Form>
   );

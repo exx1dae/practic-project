@@ -20,7 +20,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button.tsx";
-import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Files,
+  FileText,
+  Link,
+} from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input.tsx";
 import {
@@ -29,15 +36,18 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
+import { EmptyState } from "@/components/custom/EmptyState.tsx";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  additionalHandler?: (value: string) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  additionalHandler,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -146,7 +156,15 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <EmptyState
+                    title="Нет данных"
+                    description="Добавьте изображения с помощью формы"
+                    icons={[FileText, Link, Files]}
+                    action={{
+                      label: "Добавить изображение",
+                      onClick: () => additionalHandler("detection"),
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             )}

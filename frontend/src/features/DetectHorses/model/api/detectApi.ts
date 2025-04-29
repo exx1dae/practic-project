@@ -11,7 +11,14 @@ const detectApi = api.injectEndpoints({
       }),
       invalidatesTags: ["DetectHorses"],
     }),
+    visualizeDetection: builder.query<Blob, number>({
+      query: (id) => ({
+        url: `/visualize/${id}`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
-export const { useDetectHorsesMutation } = detectApi;
+export const { useDetectHorsesMutation, useLazyVisualizeDetectionQuery } =
+  detectApi;
