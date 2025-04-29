@@ -1,0 +1,145 @@
+import { FC, useCallback, useState } from "react";
+import { useImageUpload } from "@/hooks/use-image-upload.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { cn } from "@/lib/utils.ts";
+import { ImagePlus, Trash2, Upload, X } from "lucide-react";
+import { Button } from "@/components/ui/button.tsx";
+
+interface ImageUploadProps {
+  onChange: (imageFile: File | undefined) => void;
+  acceptedTypes?: string;
+}
+
+export const ImageUpload: FC<ImageUploadProps> = ({
+  onChange,
+  acceptedTypes = "image/*",
+}) => {
+  const {
+    previewUrl,
+    fileName,
+    fileInputRef,
+    handleThumbnailClick,
+    handleFileChange,
+    handleRemove,
+  } = useImageUpload({
+    onUpload: onChange,
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const fakeEvent: unknown = {
+          target: {
+            files: [file],
+          },
+        };
+        handleFileChange(fakeEvent as React.ChangeEvent<HTMLInputElement>);
+      }
+    },
+    [handleFileChange],
+  );
+
+  return (
+    <div className="w-full rounded-xl shadow-sm space-y-2">
+      <Input
+        type="file"
+        accept={acceptedTypes}
+        className="hidden"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+
+      {!previewUrl ? (
+        <div
+          onClick={handleThumbnailClick}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={cn(
+            "flex h-64 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 transition-colors hover:bg-muted",
+            isDragging && "border-primary/50 bg-primary/5",
+          )}
+        >
+          <div className="rounded-full bg-background p-3 shadow-sm">
+            <ImagePlus className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium">Нажмите для выбора</p>
+            <p className="text-xs text-muted-foreground">
+              или перетащите файл сюда
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="relative">
+          <div className="group relative h-64 overflow-hidden rounded-lg border">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleThumbnailClick}
+                className="h-9 w-9 p-0"
+                type="button"
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleRemove}
+                className="h-9 w-9 p-0"
+                type="button"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          {fileName && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="truncate">{fileName}</span>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="ml-auto rounded-full p-1 hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
