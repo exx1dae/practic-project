@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Eye,
   Files,
   FileText,
@@ -37,21 +38,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { EmptyState } from "@/components/custom/EmptyState.tsx";
+import { useDownloadJson } from "@/hooks/use-download-json.ts";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  additionalHandler?: (value: string) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  additionalHandler,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const { downloadJson } = useDownloadJson();
 
   const table = useReactTable({
     data,
@@ -68,11 +69,17 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
     },
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 5,
+      },
+    },
   });
 
   return (
     <div>
-      <div className="flex items-center py-4 gap-4">
+      <div className="flex items-center py-4 gap-2">
         <Input
           placeholder="Введите имя файла..."
           value={
@@ -83,6 +90,13 @@ export function DataTable<TData, TValue>({
           }
           className="w-full"
         />
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={() => downloadJson(data, "AllDetections.json")}
+        >
+          <Download />
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="ml-auto">
@@ -160,10 +174,6 @@ export function DataTable<TData, TValue>({
                     title="Нет данных"
                     description="Добавьте изображения с помощью формы"
                     icons={[FileText, Link, Files]}
-                    action={{
-                      label: "Добавить изображение",
-                      onClick: () => additionalHandler("detection"),
-                    }}
                   />
                 </TableCell>
               </TableRow>

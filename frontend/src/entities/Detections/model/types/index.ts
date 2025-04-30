@@ -7,6 +7,7 @@ export interface Detection {
 export interface HistoryItem {
   id: number;
   filename: string;
+  count: number;
   result: {
     fileName: string;
     detections: Detection[];

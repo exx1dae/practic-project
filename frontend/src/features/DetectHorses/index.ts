@@ -1,1 +1,4 @@
-export { useDetectHorsesMutation } from "./model/api/detectApi";
+export {
+  useDetectHorsesMutation,
+  useLazyVisualizeDetectionQuery,
+} from "./model/api/detectApi";

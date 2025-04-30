@@ -16,11 +16,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button.tsx";
 import { ImageUpload } from "@/components/custom/ImageUpload.tsx";
 import { toast } from "sonner";
-import { useDetectHorsesMutation } from "@/features/DetectHorses";
+import {
+  useDetectHorsesMutation,
+  useLazyVisualizeDetectionQuery,
+} from "@/features/DetectHorses";
 import { Loader } from "lucide-react";
-import { useLazyVisualizeDetectionQuery } from "@/features/DetectHorses/model/api/detectApi.ts";
+import { useAppDispatch } from "@/hooks";
+import { detectionsSliceActions } from "@/entities/Detections";
+import { useEffect } from "react";
 
-export const DetectForm = ({ setUrl }: { setUrl: (url: string) => void }) => {
+export const DetectionForm = () => {
   const methods = useForm<DetectSchemaType>({
     resolver: zodResolver(DetectSchema),
     mode: "onBlur",
@@ -31,24 +36,31 @@ export const DetectForm = ({ setUrl }: { setUrl: (url: string) => void }) => {
     formState: { isSubmitting },
   } = methods;
 
-  const [visualize, { data: blob }] = useLazyVisualizeDetectionQuery();
+  const dispatch = useAppDispatch();
+
+  const [visualize, { isLoading: visualizeLoading }] =
+    useLazyVisualizeDetectionQuery();
   const [detectHorses, { isLoading }] = useDetectHorsesMutation();
+
+  useEffect(() => {
+    dispatch(
+      detectionsSliceActions.setVisualizeDetectionLoading(visualizeLoading),
+    );
+  }, [visualizeLoading, dispatch]);
 
   const onSubmit = async (data: DetectSchemaType) => {
     try {
       const formData = new FormData();
       formData.append("file", data.file);
+      const { id: detectionId } = await detectHorses(formData).unwrap();
 
-      const response = await detectHorses(formData).unwrap();
-      await visualize(response.id).unwrap();
+      const blob = await visualize(detectionId).unwrap();
 
       const url = URL.createObjectURL(blob);
-
-      setUrl(url);
-
-      console.log(response);
+      dispatch(detectionsSliceActions.setPreviewUrl(url));
     } catch (e) {
-      toast.error(e.message);
+      toast.error("Произошла непредвиденная ошибка! Попробуйте снова");
+      console.error(e);
     }
   };
 

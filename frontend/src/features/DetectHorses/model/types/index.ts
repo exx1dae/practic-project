@@ -1,4 +1,4 @@
-import { Detection } from "@/entities/Detetctions";
+import { Detection } from "src/entities/Detections";
 
 export interface DetectHorsesResponse {
   id: number;
